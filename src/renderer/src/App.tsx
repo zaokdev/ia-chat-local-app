@@ -1,7 +1,11 @@
+import MessageField from "./components/MessageField"
+
 function App(): JSX.Element {
   return (
     <>
-      <div className="dark:bg-zinc-800 h-screen dark:text-white">Aquí voy a crear la app uwu</div>
+      <main className="dark:bg-zinc-800 h-screen dark:text-white px-6">
+        <MessageField />
+      </main>
     </>
   )
 }
