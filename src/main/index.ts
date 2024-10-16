@@ -1,7 +1,11 @@
+import express from "express"
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+
+const serverApp = express()
+const PORT=3000;
 
 function createWindow(): void {
   // Create the browser window.
