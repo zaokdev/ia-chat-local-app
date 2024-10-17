@@ -1,11 +1,74 @@
 import express from "express"
+import cors from "cors"
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
+//Configuración
 const serverApp = express()
-const PORT=3000;
+const PORT = 3000
+
+serverApp.use(cors({
+  origin: '*', // Permitir cualquier origen
+  methods: '*', // Permitir cualquier método
+  allowedHeaders: '*', // Permitir cualquier header
+}));
+
+serverApp.use(express.json());
+
+//Ruta para hacer el fetch
+serverApp.post('/api/generate', async (req, res) => {
+  const { prompt, model } = req.body
+
+  try {
+    const response = await fetch('http://127.0.0.1:11434/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt, model,
+        stream: true
+      })
+    })
+
+    if (!response.ok) {
+      res.status(response.status).json({ error: 'Error en la respuesta del servidor remoto' });
+    }
+
+    res.setHeader('Content-Type', 'text/plain');
+    // Transfiere el contenido del stream de la respuesta al cliente
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    // Función para leer y enviar los datos
+    const readStream = async () => {
+      while (true) {
+        const { done, value } = await reader?.read();
+        if (done) break; // Termina si no hay más datos
+
+        const chunk = decoder.decode(value, { stream: true });
+        console.log(chunk)
+        res.write(chunk); // Envía el chunk al cliente
+      }
+      res.end(); // Finaliza la respuesta
+    };
+
+    await readStream()
+
+  } catch (e) {
+    res.json({e})
+  }
+
+
+});
+
+
+//Abrir el servidor en el puerto
+serverApp.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
 
 function createWindow(): void {
   // Create the browser window.

@@ -17,16 +17,14 @@ const MessageField = ({setMessages,messages}:any) => {
     }
 
     const answeringWithLlama = async () => {
-        const fetchingPost = await fetch('http://127.0.0.1:11434/api/generate',{
+        const fetchingPost = await fetch('http://127.0.0.1:3000/api/generate',{
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Content-Security-Policy': "default-src 'self'; connect-src *"
             },
             body: JSON.stringify({
               prompt: input,
               model:"llama3.2"
-
             })
         }).then((res) => res.json())
         .then((data) => console.log(data))
