@@ -37,12 +37,24 @@ serverApp.post('/api/generate', async (req, res) => {
       res.status(response.status).json({ error: 'Error en la respuesta del servidor remoto' });
     }
 
-    res.setHeader('Content-Type', 'text/plain');
-    // Transfiere el contenido del stream de la respuesta al cliente
-    response.body?.pipeThrough(res)
-
-    // Función para leer y enviar los datos
     
+    const reader = response.body?.getReader()
+
+    res.setHeader('Content-Type', 'text/plain');
+
+    async function sendStream(){
+      let done, value
+      while (!done) { 
+        ({done, value} = await reader?.read())
+        if(value) 
+        {
+          res.write(value)
+        }
+       }
+       res.end()
+    }
+
+    await sendStream()
 
   } catch (e) {
     res.json({e})
