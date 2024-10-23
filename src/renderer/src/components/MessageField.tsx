@@ -1,34 +1,63 @@
-import { useState } from "react"
+import { decode } from "punycode"
+import { useCallback, useState } from "react"
 
-const MessageField = ({setMessages,messages}:any) => {
+const MessageField = ({setMessages,messages,setTemporal}:any) => {
     
     const [input,setInput] = useState("")
     const [disabled,setDisabled] = useState(false)
+    const [messageId,setMessageId] = useState(0)
 
-    const savingUserMessage = (event:any) => {
+
+    const savingUserMessage = async (event:any) => {
+        console.log("Guardando...")
         if(input === "") { return }
         event.preventDefault()
         const message = input
         setMessages([...messages,{
+            id: messageId,
             name: "Kevin",
             message
         }])
+        setMessageId(messageId + 1)
 
+        await answeringWithLlama()
+        setDisabled(true)
+        setInput("")
     }
 
     const answeringWithLlama = async () => {
-        const fetchingPost = await fetch('http://127.0.0.1:3000/api/generate',{
+       try{
+        console.log("Ejecutando respuesta...")
+        const response = await fetch('http://127.0.0.1:11434/api/generate', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              prompt: input,
-              model:"llama3.2"
+              prompt: input, 
+              model: 'llama3.2',
+              stream: true
             })
-        }).then((res) => res.json())
-        .then((data) => console.log(data))
-        setInput("")
+          })
+
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
+        setTemporal("")
+
+        while(true){
+            const {done,value} = await reader?.read()
+            if (done) {
+                break;
+            }
+
+            const decodedChunk:any = decoder.decode(value, {stream: true})
+            console.log(decodedChunk)
+
+        }
+
+       }catch(e){ 
+
+       }
     }
 
 
